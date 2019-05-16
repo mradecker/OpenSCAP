@@ -1,0 +1,51 @@
+---
+
+- hosts: all
+  become: yes
+  vars:
+    oscap_profile: xccdf_org.ssgproject.content_profile_stig-rhel7-disa
+    oscap_content: ssg-rhel7-ds
+  tasks:
+  - name: Install OpenSCAP Scanner and SCAP-Security-Guide
+    yum:
+      name:
+      - openscap-scanner
+      - scap-security-guide
+      state: latest
+
+
+  # The following tasks will create scan results and a scan report.
+  # The scan results should be checked before running the playbook that is generated
+  # so that STIG items that might potentially disrupt functionality are commented out
+  # or adjusted for the system.
+
+
+  - block:
+    - name: Run OpenSCAP
+      command: oscap xccdf eval \
+        --profile {{ oscap_profile }} \
+        --stig-viewer stig-results.xml \
+        --results-arf /tmp/scan-xccdf-results.xml \
+        --report /tmp/oscap-report.html \
+        --fetch-remote-resources \
+        /usr/share/xml/scap/ssg/content/{{ oscap_content }}.xml
+      register: scan_results
+      failed_when: scan_results.rc == 1
+
+    - name: Generate playbook from scan results
+      command: oscap xccdf generate fix \
+        --fix-type ansible \
+        --result-id {{ oscap_profile }} \
+        --output stig-playbook-result.yml /tmp/scan-xccdf-results.xml
+
+    - name: Download report
+      fetch:
+        src: /tmp/oscap-report.html
+        dest: /opt/oscap-reports/{{ inventory_hostname }}_report.html
+        flat: yes
+
+    - name: Download results
+      fetch:
+        src: /tmp/scan-xccdf-results.xml
+        dest: /opt/oscap-results/{{ inventory_hostname }}_results.xml
+        flat: yes
