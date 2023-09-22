@@ -1,15 +1,16 @@
 ---
 
-- hosts: all
+- hosts: localhost
   become: yes
   vars:
-    oscap_profile: xccdf_org.ssgproject.content_profile_stig-rhel7-disa
-    oscap_content: ssg-rhel7-ds
+    oscap_profile: xccdf_mil.disa.stig_profile_MAC-1_Public
+    oscap_content: /home/mradecke/Downloads/U_RHEL_8_V1R10_STIG_SCAP_1-2_Benchmark.xml
+    results_dir: /home/mradecke
   tasks:
   - name: Install OpenSCAP Scanner and SCAP-Security-Guide
     yum:
       name:
-      - openscap-scanner
+      - openscap*
       - scap-security-guide
       state: latest
 
@@ -24,11 +25,10 @@
     - name: Run OpenSCAP
       command: oscap xccdf eval \
         --profile {{ oscap_profile }} \
-        --stig-viewer stig-results.xml \
         --results-arf /tmp/scan-xccdf-results.xml \
         --report /tmp/oscap-report.html \
-        --fetch-remote-resources \
-        /usr/share/xml/scap/ssg/content/{{ oscap_content }}.xml
+        --fetch-remote-resources
+        {{ oscap_content }}
       register: scan_results
       failed_when: scan_results.rc == 1
 
@@ -41,11 +41,11 @@
     - name: Download report
       fetch:
         src: /tmp/oscap-report.html
-        dest: /opt/oscap-reports/{{ inventory_hostname }}_report.html
+        dest: '{{ results_dir }}/{{ inventory_hostname }}_report.html'
         flat: yes
 
     - name: Download results
       fetch:
         src: /tmp/scan-xccdf-results.xml
-        dest: /opt/oscap-results/{{ inventory_hostname }}_results.xml
+        dest: '{{ results_dir }}/{{ inventory_hostname }}_results.xml'
         flat: yes
