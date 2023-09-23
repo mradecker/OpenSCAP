@@ -4,7 +4,6 @@
 
 # Ensure that you have Ansible installed on your system before running the playbook.  You will need to run these commands to install the following packages.  
 
-# yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 # yum install ansible
 
 # Further installation instructions can be found at https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html
