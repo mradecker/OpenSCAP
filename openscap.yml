@@ -5,7 +5,7 @@
   vars:
     oscap_profile: xccdf_mil.disa.stig_profile_MAC-1_Public
     oscap_content: /home/mradecke/Downloads/U_RHEL_8_V1R10_STIG_SCAP_1-2_Benchmark.xml
-    results_dir: /home/mradecke
+    results_dir: /home/mradecke/openscap
   tasks:
   - name: Install OpenSCAP Scanner and SCAP-Security-Guide
     yum:
@@ -36,7 +36,7 @@
       command: oscap xccdf generate fix \
         --fix-type ansible \
         --result-id {{ oscap_profile }} \
-        --output stig-playbook-result.yml /tmp/scan-xccdf-results.xml
+        --output {{ results_dir }}/stig-playbook-result.yml /tmp/scan-xccdf-results.xml
 
     - name: Download report
       fetch:
